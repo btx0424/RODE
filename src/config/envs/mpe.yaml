@@ -1,0 +1,10 @@
+env: mpe
+
+env_args:
+  scenario_name: simple_spread
+  episode_length: 25
+  num_agents: 2
+  num_landmarks: 3
+
+  obs_last_action: False
+  

@@ -1,0 +1,17 @@
+env: football
+
+env_args:
+  scenario_name: simple_spread
+  num_agents: 2
+  use_stacked_frames: False
+  representation:
+  rewards:
+  smm_width:
+  smm_height:
+
+  remove_redundancy:
+  zero_feature:
+  share_reward:
+  
+  obs_last_action: False
+  
