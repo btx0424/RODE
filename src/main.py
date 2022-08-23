@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import numpy as np
 import os
 import collections
@@ -10,6 +11,7 @@ import sys
 import torch as th
 from utils.logging import get_logger
 import yaml
+import wandb
 
 from run import run
 
@@ -32,6 +34,15 @@ def my_main(_run, _config, _log):
     config['env_args']['seed'] = config["seed"]
 
     # run the framework
+    wandb_config = SimpleNamespace(**config["wandb"])
+    wandb.init(
+        project=wandb_config.project,
+        entity=wandb_config.entity,
+        name=f"{wandb_config.name}/{config['env']}",
+        group="RODE",
+        config=config
+    )
+
     run(_run, config, _log)
 
 

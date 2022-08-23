@@ -1,17 +1,20 @@
 env: football
 
 env_args:
-  scenario_name: simple_spread
+  scenario_name: academy_pass_and_shoot_with_keeper
   num_agents: 2
   use_stacked_frames: False
-  representation:
-  rewards:
-  smm_width:
-  smm_height:
+  representation: simple115v2
+  rewards: scoring
+  smm_width: 96
+  smm_height: 72
 
-  remove_redundancy:
-  zero_feature:
-  share_reward:
+  remove_redundancy: False
+  zero_feature: False
+  share_reward: True
   
   obs_last_action: False
-  
+  use_render: False
+
+test_npeisodes: 20
+test_interval: 2000

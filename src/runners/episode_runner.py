@@ -8,7 +8,7 @@ import os
 import logging
 import shutil
 import copy
-
+import wandb
 
 class EpisodeRunner:
 
@@ -94,6 +94,8 @@ class EpisodeRunner:
             # Receive the actions for each agent at this timestep in a batch of size 1
             actions, roles, role_avail_actions = self.mac.select_actions(self.batch, t_ep=self.t,
                                                                          t_env=self.t_env, test_mode=test_mode)
+            actions = actions.cpu().numpy()
+
             self.batch.update({"role_avail_actions": role_avail_actions.tolist()}, ts=self.t)
 
             if self.verbose:
@@ -165,11 +167,12 @@ class EpisodeRunner:
 
         # Select actions in the last stored state
         actions, roles, role_avail_actions = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
+        actions = actions.cpu().numpy()
         self.batch.update({"actions": actions, "roles": roles, "role_avail_actions": role_avail_actions}, ts=self.t)
 
         cur_stats = self.test_stats if test_mode else self.train_stats
         cur_returns = self.test_returns if test_mode else self.train_returns
-        log_prefix = "test_" if test_mode else ""
+        log_prefix = "test/" if test_mode else "train/"
         cur_stats.update({k: cur_stats.get(k, 0) + env_info.get(k, 0) for k in set(cur_stats) | set(env_info)})
         cur_stats["n_episodes"] = 1 + cur_stats.get("n_episodes", 0)
         cur_stats["ep_length"] = self.t + cur_stats.get("ep_length", 0)
@@ -193,6 +196,13 @@ class EpisodeRunner:
         return self.batch
 
     def _log(self, returns, stats, prefix):
+        infos = {"env_step": self.t_env}
+        infos[prefix+"average_episode_return"] = np.mean(returns)
+        infos.update({
+            prefix + k: v / stats["n_episodes"] for k, v in stats.items() if k != "n_episodes"
+        })
+        wandb.log(infos)
+
         self.logger.log_stat(prefix + "return_mean", np.mean(returns), self.t_env)
         self.logger.log_stat(prefix + "return_std", np.std(returns), self.t_env)
         returns.clear()

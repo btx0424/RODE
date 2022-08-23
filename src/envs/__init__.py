@@ -69,17 +69,32 @@ class Football(MultiAgentEnv):
         self.episode_limit = self.env.max_steps
         self.n_agents = self.env.num_agents
         self.n_actions = self.env.action_space[0].n
-    
+
+        self.games = 0
+        self.wins = 0
+
     def reset(self):
-        return self.env.reset()
+        self.obs = self.env.reset()
+        return self.obs
     
     def step(self, actions):
         self.obs, reward, done, info = self.env.step(actions)
-        return reward.mean(), done, info
+        done = np.all(done)
+        win = int(info["score_reward"]>0)
+        if done: 
+            self.games += 1
+            self.wins += win
+        return np.sum(reward), done, {"win": win}
     
     def get_state_size(self):
         return self.env.observation_space[0].shape[0] * self.n_agents
     
+    def get_obs_size(self):
+        return self.env.observation_space[0].shape[0]
+    
+    def get_total_actions(self):
+        return self.n_actions
+
     def get_state(self):
         return self.obs.flatten()
     
@@ -89,6 +104,12 @@ class Football(MultiAgentEnv):
     def get_avail_actions(self):
         return np.ones((self.n_agents, self.n_actions))
 
+    def get_stats(self):
+        return {
+            "wins": self.wins,
+            "games": self.games,
+            "win_rate": self.wins / self.games
+        }
     
 REGISTRY["mpe"] = partial(env_fn, env=MPE)
 REGISTRY["football"] = partial(env_fn, Football)
