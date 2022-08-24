@@ -45,6 +45,7 @@ class RODEMAC:
 
         # filter out actions infeasible for selected roles; self.selected_roles [bs*n_agents]
         # self.role_action_spaces [n_roles, n_actions]
+
         role_avail_actions = th.gather(self.role_action_spaces.unsqueeze(0).repeat(self.n_agents, 1, 1), dim=1,
                                        index=self.selected_roles.unsqueeze(-1).unsqueeze(-1).repeat(1, 1, self.n_actions).long()).squeeze()
         role_avail_actions = role_avail_actions.int().view(ep_batch.batch_size, self.n_agents, -1)

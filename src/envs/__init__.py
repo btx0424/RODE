@@ -16,6 +16,8 @@ def env_fn(env, **kwargs) -> MultiAgentEnv:
 REGISTRY = {}
 # REGISTRY["sc2"] = partial(env_fn, env=StarCraft2Env)
 
+from gym import spaces
+from math import prod
 class MPE(MultiAgentEnv):
     def __init__(self, **kwargs) -> None:
         super().__init__()
@@ -27,11 +29,26 @@ class MPE(MultiAgentEnv):
         self.n_agents = len(self.env.agents)
 
         self.n_actions = self.env.action_space[0].n
+        if isinstance(self.action_space, spaces.Discrete):
+            self.n_actions = self.action_space.n
+            self.multidiscrete = False
+        else:
+            self.multidiscrete = True
+            self.nvec = self.action_space.high - self.action_space.low + 1
+            assert len(self.nvec) == 2
+            self.n_actions = prod(self.nvec)
 
     def reset(self):
         return self.env.reset()
     
     def step(self, actions):
+        if self.multidiscrete:
+            actions = np.concatenate([
+                np.eye(self.nvec[0])[actions//self.nvec[1]],
+                np.eye(self.nvec[1])[actions%self.nvec[1]]
+            ], axis=-1)
+        else:
+            actions = np.eye(self.n_actions)[actions]
         obs, reward, done, info = self.env.step(actions)
         reward = np.array(reward)
         return reward.mean(), np.array(done).any(), {}
